@@ -1,26 +1,18 @@
 // components/ExperienciaList.js
+import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
-
-export default function ExperienciaList({ experiencias = [], onDeleteExperience, onEditExperience }) { // Recibir onEditExperience como prop
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  if (loading) return <p>Cargando experiencias...</p>;
-  if (error) return <p>Error: {error}</p>;
+export default function ExperienciaList({ experiencias = [], onDeleteExperience }) {
+  const router = useRouter();
 
   const handleDelete = (id) => {
-    // Llamar a la función pasada desde el componente padre
     if (onDeleteExperience) {
       onDeleteExperience(id);
     }
   };
 
-  const handleEdit = (exp) => {
-    // Llamar a la función pasada desde el componente padre para editar
-    if (onEditExperience) {
-      onEditExperience(exp);
-    }
+  const handleEdit = (id) => {
+    // Redirige a la página de edición pasando el id en la query string
+    router.push(`/edit?id=${id}`);
   };
 
   return (
@@ -33,7 +25,7 @@ export default function ExperienciaList({ experiencias = [], onDeleteExperience,
             <p><strong>Dueño:</strong> {exp.owner}</p>
             <p><strong>Participantes:</strong> {exp.participants.join(', ')}</p>
             <button onClick={() => handleDelete(exp._id)}>Eliminar</button> {/* Botón para eliminar */}
-            <button onClick={() => handleEdit(exp)}>Editar</button> {/* Botón para editar */}
+            <button onClick={() => handleEdit(exp._id)}>Editar</button> {/* Botón para editar */}
           </li>
         ))}
       </ul>
