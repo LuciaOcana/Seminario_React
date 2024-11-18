@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-export default function ExperienciaList({ experiencias = [], onDeleteExperience }) { // Recibir onDeleteExperience como prop
+export default function ExperienciaList({ experiencias = [], onDeleteExperience, onEditExperience }) { // Recibir onEditExperience como prop
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -16,9 +16,16 @@ export default function ExperienciaList({ experiencias = [], onDeleteExperience 
     }
   };
 
+  const handleEdit = (exp) => {
+    // Llamar a la función pasada desde el componente padre para editar
+    if (onEditExperience) {
+      onEditExperience(exp);
+    }
+  };
+
   return (
     <div>
-      <h2-form>Lista de Experiencias</h2-form>
+      <h2>Lista de Experiencias</h2>
       <ul>
         {experiencias.map((exp) => (
           <li key={exp._id}>
@@ -26,6 +33,7 @@ export default function ExperienciaList({ experiencias = [], onDeleteExperience 
             <p><strong>Dueño:</strong> {exp.owner}</p>
             <p><strong>Participantes:</strong> {exp.participants.join(', ')}</p>
             <button onClick={() => handleDelete(exp._id)}>Eliminar</button> {/* Botón para eliminar */}
+            <button onClick={() => handleEdit(exp)}>Editar</button> {/* Botón para editar */}
           </li>
         ))}
       </ul>

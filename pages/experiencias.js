@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import ExperienciaList from '../components/ExperienciaList';
 import ExperienciaForm from '../components/ExperienciaForm';
 
@@ -6,7 +6,10 @@ export default function Experiencias() {
   const [experiencias, setExperiencias] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const URL = "http://localhost:3000/api/experiencias"
+  const [editingExperience, setEditingExperience] = useState(null); // Añadir estado para la experiencia en edición
+
+  const URL = "http://localhost:3000/api/experiencias";
+
   useEffect(() => {
     setLoading(true);
     const fetchExperiencias = async () => {
@@ -25,8 +28,32 @@ export default function Experiencias() {
   }, []);
 
   const handleExperienciaSubmit = async (newExperiencia) => {
-    //Crear experiencia
-    try {
+    // Si estamos editando, actualizamos la experiencia
+    if (editingExperience) {
+      // Actualizar la experiencia
+      try {
+        const response = await fetch(`${URL}/${editingExperience._id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newExperiencia),
+        });
+
+        if (!response.ok) {
+          throw new Error('Error al actualizar la experiencia');
+        }
+
+        const data = await response.json();
+        // Actualizamos la lista de experiencias
+        setExperiencias(experiencias.map((exp) => (exp._id === data._id ? data : exp)));
+        setEditingExperience(null); // Limpiamos el estado de edición
+      } catch (err) {
+        console.error(err.message);
+      }
+    } else {
+      // Crear nueva experiencia
+      try {
         const response = await fetch(URL, {
           method: 'POST',
           headers: {
@@ -34,44 +61,56 @@ export default function Experiencias() {
           },
           body: JSON.stringify(newExperiencia),
         });
-  
+
         if (!response.ok) {
           throw new Error('Error al crear la experiencia');
         }
-  
+
         const data = await response.json();
-        setExperiencias([...experiencias, data]); // Actualiza la lista de experiencias
+        setExperiencias([...experiencias, data]);
       } catch (err) {
         console.error(err.message);
       }
+    }
   };
 
   const handleDeleteExperience = async (expId) => {
-    // Eliminar experiencia
     try {
-        const response = await fetch(`http://localhost:3000/api/experiencias/${expId}`, {
-          method: 'DELETE',
-        });
-  
-        if (!response.ok) {
-          throw new Error('Error al eliminar la experiencia');
-        }
-  
-        setExperiencias(experiencias.filter(exp => exp._id !== expId)); // Actualiza la lista
-      } catch (err) {
-        console.error(err);
+      const response = await fetch(`${URL}/${expId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al eliminar la experiencia');
       }
+
+      setExperiencias(experiencias.filter((exp) => exp._id !== expId));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleEditExperience = (experience) => {
+    setEditingExperience(experience); // Establecemos la experiencia en edición
   };
 
   return (
     <div className="form-container">
-      <h2-form>Gestión de Experiencias</h2-form>
+      <h2>Gestión de Experiencias</h2>
       {loading && <p>Cargando experiencias...</p>}
       {error && <p>Error: {error}</p>}
       {!loading && !error && (
         <>
-          <ExperienciaList experiencias={experiencias} onDeleteExperience={handleDeleteExperience} />
-          <ExperienciaForm onSubmit={handleExperienciaSubmit} />
+          <ExperienciaList
+            experiencias={experiencias}
+            onDeleteExperience={handleDeleteExperience}
+            onEditExperience={handleEditExperience}
+          />
+          <ExperienciaForm
+            currentExperience={editingExperience}
+            onSubmit={handleExperienciaSubmit}
+            onCancel={() => setEditingExperience(null)} // Limpia la experiencia en edición
+          />
         </>
       )}
     </div>

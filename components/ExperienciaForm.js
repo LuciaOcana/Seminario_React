@@ -1,10 +1,11 @@
 // components/ExperienciaForm.js
 import { useState, useEffect } from 'react';
 
-export default function ExperienciaForm({ onSubmit }) {
-  const [description, setDescription] = useState('');
-  const [owner, setOwner] = useState('');
-  const [participants, setParticipants] = useState([]);
+export default function ExperienciaForm({ currentExperience = null, onSubmit, onCancel }) {
+  // Estados iniciales, utiliza valores predeterminados si `currentExperience` no está definido
+  const [description, setDescription] = useState(currentExperience?.description || '');
+  const [owner, setOwner] = useState(currentExperience?.owner || '');
+  const [participants, setParticipants] = useState(currentExperience?.participants || []);
   const [users, setUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
 
@@ -29,15 +30,21 @@ export default function ExperienciaForm({ onSubmit }) {
     e.preventDefault();
 
     // Verificación de que al menos la descripción y el dueño estén completos
-    if (description && owner) {
-      const newExperiencia = {
-        description,
+    if (description.trim() && owner) {
+      const experiencia = {
+        description: description.trim(),
         owner,
         participants,
       };
-      onSubmit(newExperiencia); // Llama a onSubmit para añadir experiencia
+      onSubmit(experiencia); // Llama a onSave para guardar la experiencia (nueva o editada)
+      // Si es una nueva experiencia, resetea el formulario
+      if (!currentExperience) {
+        setDescription('');
+        setOwner('');
+        setParticipants([]);
+      }
     } else {
-      alert('Debes completar todos los campos');
+      alert('Debes completar todos los campos obligatorios.');
     }
   };
 
@@ -45,11 +52,12 @@ export default function ExperienciaForm({ onSubmit }) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <h2-form>Lista de Experiencias</h2-form>
+      <h2>{currentExperience ? 'Editar Experiencia' : 'Crear Experiencia'}</h2>
       <div>
         <label>Descripción de la experiencia:</label>
-        <input className='formdiv'
-          type="text" 
+        <input
+          type="text"
+          className='formdiv'
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
@@ -57,7 +65,11 @@ export default function ExperienciaForm({ onSubmit }) {
       
       <div>
         <label>Seleccionar dueño:</label>
-        <select className='formdiv' value={owner} onChange={(e) => setOwner(e.target.value)}>
+        <select
+          className='formdiv'
+          value={owner}
+          onChange={(e) => setOwner(e.target.value)}
+        >
           <option value="">--Selecciona un usuario--</option>
           {users.map((user) => (
             <option key={user._id} value={user._id}>
@@ -69,10 +81,15 @@ export default function ExperienciaForm({ onSubmit }) {
 
       <div>
         <label>Seleccionar participantes:</label>
-        <select className='formdiv' multiple value={participants} onChange={(e) => {
-          const selectedParticipants = Array.from(e.target.selectedOptions, option => option.value);
-          setParticipants(selectedParticipants);
-        }}>
+        <select
+          className='formdiv'
+          multiple
+          value={participants}
+          onChange={(e) => {
+            const selectedParticipants = Array.from(e.target.selectedOptions, option => option.value);
+            setParticipants(selectedParticipants);
+          }}
+        >
           {users.map((user) => (
             <option key={user._id} value={user._id}>
               {user.name}
@@ -81,7 +98,14 @@ export default function ExperienciaForm({ onSubmit }) {
         </select>
       </div>
 
-      <button type="submit">Crear Experiencia</button>
+      <button type="submit">
+        {currentExperience ? 'Guardar Cambios' : 'Crear Experiencia'}
+      </button>
+      {onCancel && (
+        <button type="button" onClick={onCancel}>
+          Cancelar
+        </button>
+      )}
     </form>
   );
 }
